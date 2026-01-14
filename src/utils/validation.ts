@@ -2,8 +2,12 @@ import { type schemasKeys, schemas } from './validationSchemas';
 import GeneralErrorResponse from '../exceptions/GeneralErrorResponse';
 import { ERRORS_GENERAL } from './errors';
 import logger from './logger';
+import { z } from 'zod';
 
-export function validateBody(data: object, schemaName: schemasKeys) {
+export function validateBody<K extends schemasKeys>(
+  data: unknown,
+  schemaName: K,
+): z.infer<(typeof schemas)[K]> {
   logger.info('IN - validateBody');
   const schemaValidation = schemas[schemaName];
 
@@ -22,5 +26,5 @@ export function validateBody(data: object, schemaName: schemasKeys) {
   }
 
   logger.info('OUT - validateBody');
-  return result.data;
+  return result.data as z.infer<(typeof schemas)[K]>;
 }

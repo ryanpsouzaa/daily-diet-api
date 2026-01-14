@@ -6,6 +6,14 @@ export const schemas = {
     name: z.string(),
     email: z.email(),
   }),
+
+  createMealsSchema: z.object({
+    name: z.string(),
+    userId: z.uuid(),
+    description: z.string(),
+    isOnDiet: z.boolean(),
+    dietDateTime: z.coerce.date().optional(),
+  }),
 };
 
 export type schemasKeys = keyof typeof schemas;

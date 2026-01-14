@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import cookies from '@fastify/cookie';
-import usersRoutes from './routes/users';
+import usersRoutes from './routes/usersRoutes';
+import mealsRoutes from './routes/MealsRoutes';
 import GeneralErrorResponse from './exceptions/GeneralErrorResponse';
 import logger from '../src/utils/logger';
 
@@ -8,6 +9,7 @@ export const app = fastify();
 
 app.register(cookies);
 app.register(usersRoutes);
+app.register(mealsRoutes);
 
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof GeneralErrorResponse) {

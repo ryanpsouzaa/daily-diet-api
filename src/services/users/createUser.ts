@@ -1,30 +1,31 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import logger from '../../utils/logger';
 import GeneralErrorResponse from '../../exceptions/GeneralErrorResponse';
-import statusCode from '../../utils/statusCode';
 import { ONBOARDING_USER_ERRORS } from '../../utils/errors';
+import statusCode from '../../utils/statusCode';
 import { validateBody } from '../../utils/validation';
 import { randomUUID } from 'node:crypto';
-import { knex } from '../../database/database';
-import type { User } from '../../@types/User';
+import UserModel from '../../models/UserModel';
+import type { User } from '../../@types/users/User';
+import type { CreateUserRequest } from '../../@types/users/CreateUserRequest';
 
 export default async function createUser(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
+  //todo: melhorar captura de erros -> deve ser em codigo
   logger.info('IN - createUser');
   logger.debug(request.body, 'Request Body =>');
 
-  //criar @types do request
   const bodyRequest: any = request.body;
 
-  const { username, name, email } = validateBody(
+  const createUserBody: CreateUserRequest = validateBody(
     bodyRequest,
     'createUsersSchema',
   );
-  logger.debug({ username, name, email }, 'User info');
+  logger.debug(createUserBody, 'User info');
 
-  const user = createUserEntity(username, name, email);
+  const user = createUserEntity(createUserBody);
 
   await insertUser(user);
 
@@ -36,13 +37,13 @@ export default async function createUser(
   });
 }
 
-function createUserEntity(username: string, name: string, email: string) {
+function createUserEntity(body: CreateUserRequest): User {
   const user: User = {
     id: randomUUID(),
     sessionId: randomUUID(),
-    username,
-    name,
-    email,
+    username: body.username,
+    name: body.name,
+    email: body.email,
   };
 
   return user;
@@ -50,7 +51,8 @@ function createUserEntity(username: string, name: string, email: string) {
 
 async function insertUser(user: User) {
   logger.info('IN - insertUser');
-  await knex('users').insert(user);
+  const userInserted = await UserModel.create(user);
 
   logger.info('OUT - insertUser');
+  return userInserted;
 }
