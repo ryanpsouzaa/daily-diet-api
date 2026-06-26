@@ -1,13 +1,14 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import logger from '../../utils/logger';
 import GeneralErrorResponse from '../../exceptions/GeneralErrorResponse';
-import { ONBOARDING_USER_ERRORS } from '../../utils/errors';
+import { USER_ONBOARDING_ERRORS } from '../../utils/messages';
 import statusCode from '../../utils/statusCode';
 import { validateBody } from '../../utils/validation';
-import { randomUUID } from 'node:crypto';
+import { createHmac, randomUUID } from 'node:crypto';
 import UserModel from '../../models/UserModel';
 import type { User } from '../../@types/users/User';
 import type { CreateUserRequest } from '../../@types/users/CreateUserRequest';
+import { env } from '../../env/index.js';
 
 export default async function createUser(
   request: FastifyRequest,
@@ -15,7 +16,6 @@ export default async function createUser(
 ) {
   //todo: melhorar captura de erros -> deve ser em codigo
   logger.info('IN - createUser');
-  logger.debug(request.body, 'Request Body =>');
 
   const bodyRequest: any = request.body;
 
@@ -23,27 +23,42 @@ export default async function createUser(
     bodyRequest,
     'createUsersSchema',
   );
-  logger.debug(createUserBody, 'User info');
 
-  const user = createUserEntity(createUserBody);
+  await validateUserEmail(createUserBody.email);
+
+  createUserBody.password = hashPassword(createUserBody.password);
+
+  const user = buildUserData(createUserBody);
 
   await insertUser(user);
 
   logger.info('OUT - createUser');
-  //todo: melhorar isso em um HttpResponse
+
   reply.code(statusCode.CREATED).send({
     _id: user.id,
     message: 'Usuário criado',
   });
 }
 
-function createUserEntity(body: CreateUserRequest): User {
+async function validateUserEmail(email: string) {
+  const result = await UserModel.findByEmail(email);
+
+  if (result) {
+    throw new GeneralErrorResponse(
+      USER_ONBOARDING_ERRORS.EMAIL_ALREADY_EXISTS,
+      statusCode.BAD_REQUEST,
+    );
+  }
+}
+
+function buildUserData(body: CreateUserRequest): User {
   const user: User = {
     id: randomUUID(),
     sessionId: randomUUID(),
     username: body.username,
     name: body.name,
     email: body.email,
+    password: body.password,
   };
 
   return user;
@@ -55,4 +70,8 @@ async function insertUser(user: User) {
 
   logger.info('OUT - insertUser');
   return userInserted;
+}
+
+function hashPassword(password: string) {
+  return createHmac('sha256', env.HMAC_SECRET).update(password).digest('hex');
 }

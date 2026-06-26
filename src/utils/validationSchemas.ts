@@ -5,6 +5,7 @@ export const schemas = {
     username: z.string(),
     name: z.string(),
     email: z.email(),
+    password: z.string(),
   }),
 
   createMealsSchema: z.object({

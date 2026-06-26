@@ -1,4 +1,4 @@
-import { USER_ONBOARDING } from './messages';
+import { USER_ONBOARDING_ERRORS } from './messages';
 
 export const ERRORS_GENERAL = {
   INVALID_PARAMS: {
@@ -12,7 +12,7 @@ export const ERRORS_GENERAL = {
 };
 export const ONBOARDING_USER_ERRORS = {
   INVALID_PARAMS: {
-    message: USER_ONBOARDING.INVALID_PARAMS,
+    message: USER_ONBOARDING_ERRORS.INVALID_PARAMS,
     statusCode: 400,
   },
 };

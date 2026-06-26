@@ -14,6 +14,7 @@ const envSchema = z.object({
   DATABASE_URL_NODE: z.string(),
   LOG_LEVEL: z.enum(['debug', 'info', 'silent', 'error']),
   PORT: z.number().default(3000),
+  HMAC_SECRET: z.string(),
 });
 
 const _env = envSchema.safeParse(process.env);
